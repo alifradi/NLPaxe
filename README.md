@@ -178,6 +178,10 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 [A Visual Notebook to Using BERT for text classification](https://colab.research.google.com/github/jalammar/jalammar.github.io/blob/master/notebooks/bert/A_Visual_Notebook_to_Using_BERT_for_the_First_Time.ipynb#scrollTo=3rUMKuVgwzkY)
 
+[Deep Attention Model DAM](https://github.com/baidu/Dialogue)
+
+[Sentiment Analysis with BERT and Transformers by Hugging Face using PyTorch and Python](https://curiousily.com/posts/sentiment-analysis-with-bert-and-hugging-face-using-pytorch-and-python/)
+
 # 07 - Event Extraction (EE)
 
 [ANN for Event Extraction](https://tel.archives-ouvertes.fr/tel-01943841/document)
