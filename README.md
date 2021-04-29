@@ -172,13 +172,13 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 7 - try it on one document to give a pie chart about the presence of each targeted topic in the testing article.  
 
-## 06 - BERTology
+# 06 - BERTology
 
 [Transformers from scratch](http://nlp.seas.harvard.edu/2018/04/03/attention.html)
 
 [A Visual Notebook to Using BERT for text classification](https://colab.research.google.com/github/jalammar/jalammar.github.io/blob/master/notebooks/bert/A_Visual_Notebook_to_Using_BERT_for_the_First_Time.ipynb#scrollTo=3rUMKuVgwzkY)
 
-## 07 - Event Extraction (EE)
+# 07 - Event Extraction (EE)
 
 [ANN for Event Extraction](https://tel.archives-ouvertes.fr/tel-01943841/document)
 
@@ -189,7 +189,7 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 [Refining Event Extraction through Cross-document Inference](https://www.aclweb.org/anthology/P08-1030.pdf)
 
-## 08 - NLP standards
+# 08 - NLP standards
 
 [The Automatic Content Extraction (ACE) Program Tasks, Data, and Evaluation](http://www.lrec-conf.org/proceedings/lrec2004/pdf/5.pdf)
 
