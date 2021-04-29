@@ -172,9 +172,20 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 7 - try it on one document to give a pie chart about the presence of each targeted topic in the testing article.  
 
+
+[LDA2vec pytorch](https://github.com/TropComplique/lda2vec-pytorch)
+[LDA for time topic tracking](https://nbviewer.jupyter.org/github/cemoody/lda2vec/blob/master/examples/hacker_news/lda2vec/lda2vec.ipynb)
+[Hybrid LDA (LDA + word embedding)](https://multithreaded.stitchfix.com/blog/2016/05/27/lda2vec/#topic=38&lambda=1&term=)
+
 # 06 - BERTology
 
-[Transformers from scratch](http://nlp.seas.harvard.edu/2018/04/03/attention.html)
+[Transformers explained](https://towardsdatascience.com/transformers-explained-visually-part-3-multi-head-attention-deep-dive-1c1ff1024853#:~:text=Multiple%20Attention%20Heads&text=The%20Attention%20module%20splits%20its,independently%20through%20a%20separate%20Head.&text=This%20is%20called%20Multi%2Dhead,and%20nuances%20for%20each%20word.)
+
+[Transformers from scratch 1](http://nlp.seas.harvard.edu/2018/04/03/attention.html)
+[Transformers from scratch 2](http://peterbloem.nl/blog/transformers)
+[Illustrated transformer](http://jalammar.github.io/illustrated-transformer/)
+[Transformers tutorial notebook](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial6/Transformers_and_MHAttention.html)
+[Transformers PACKT](https://github.com/PacktPublishing/Transformers-for-Natural-Language-Processing)
 
 [A Visual Notebook to Using BERT for text classification](https://colab.research.google.com/github/jalammar/jalammar.github.io/blob/master/notebooks/bert/A_Visual_Notebook_to_Using_BERT_for_the_First_Time.ipynb#scrollTo=3rUMKuVgwzkY)
 
@@ -182,7 +193,11 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 [Sentiment Analysis with BERT and Transformers by Hugging Face using PyTorch and Python](https://curiousily.com/posts/sentiment-analysis-with-bert-and-hugging-face-using-pytorch-and-python/)
 
+[BERT for NER](https://github.com/bond005/bert_ner)
+
+
 # 07 - Event Extraction (EE)
+
 
 [ANN for Event Extraction](https://tel.archives-ouvertes.fr/tel-01943841/document)
 
@@ -193,10 +208,28 @@ with a right join to all vacobulary terms setting the non existing terms frequen
 
 [Refining Event Extraction through Cross-document Inference](https://www.aclweb.org/anthology/P08-1030.pdf)
 
+[Entity, Relation, and Event Extraction with Contextualized Span Representations](https://www.aclweb.org/anthology/D19-1585.pdf)
+
+[Semantic Role Labeling](https://www.aclweb.org/anthology/R19-1073.pdf)
+
+[Exploring Pre-trained Language Models for Event Extraction and Generation](https://www.aclweb.org/anthology/P19-1522.pdf)
+
+[BERT NLP — How To Build a Question Answering Bot](https://towardsdatascience.com/bert-nlp-how-to-build-a-question-answering-bot-98b1d1594d7b)
+
+[BERT Fine-tune for text classification](https://colab.research.google.com/drive/1ywsvwO6thOVOrfagjjfuxEf6xVRxbUNO#scrollTo=BJR6t_gCQe_x)
+
 # 08 - NLP standards
 
 [The Automatic Content Extraction (ACE) Program Tasks, Data, and Evaluation](http://www.lrec-conf.org/proceedings/lrec2004/pdf/5.pdf)
+[GLUE framework](https://openreview.net/pdf?id=rJ4km2R5t7)
 
+For questions 
+
+[Data science stack exchange](https://datascience.stackexchange.com/)
+[Learn pytorch](https://pytorch.org/tutorials/beginner/blitz/neural_networks_tutorial.html#sphx-glr-beginner-blitz-neural-networks-tutorial-py)
+[torch.nn.module documentation](https://pytorch.org/docs/stable/_modules/torch/nn/modules/transformer.html)
+[Cheat sheets](https://startupsventurecapital.com/essential-cheat-sheets-for-machine-learning-and-deep-learning-researchers-efb6a8ebd2e5)
+[TAC knowledge population](https://tac.nist.gov/2017/KBP/)
 
 
 
