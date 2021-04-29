@@ -1,0 +1,50 @@
+creating features:
+
+
+
+observations 
+== sentences
+
+
+feature selection 
+== is a MUST !
+χ-squared feature selection procedure
+ 11-fold crossvalidation
+
+
+
+
+
+classification method
+ usually SVM ( need to know why) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+ne stuff:
+existince withina specific labels: 1/0
+frequency within a single sentence of that type of NE:
+for aal NE desired we ; create  columns :
+- NElabelExistence
+- NElabelFreq
+
+work flow:
+detect NE with an integrated stuff(spacy) for each sentence
+if lab
+
+doc_id--> fullText--> NE(byname)existence--> NE(byname)Frequency
+
+
+
+DEPENDENCY:
+
+lexicalized dependency relations
