@@ -1,0 +1,263 @@
+---
+title: "BERTopic"
+author: "Ali FRADY"
+date: "18/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## References 
+https://towardsdatascience.com/topic-modeling-with-bert-779f7db187e6
+https://github.com/MaartenGr/BERTopic
+
+```{r include=FALSE}
+source("Imports/01 - R dependencies.R")
+use_condaenv()
+source_python("Imports/02 - pyDependencies.py")
+source("Imports/01 - R jobs.R")
+```
+
+```{r}
+scrap_date = "2021-04-21"
+corpus<- readRDS(paste0('data/corpus2BERT ',scrap_date,'.rds')) 
+head(tibble(corpus))
+
+ art_parg = SegmentizeText(as.data.frame(corpus),'texts','\n\n') %>%
+  mutate(paragraph_text =  gsub("[][#()*,.:;<=>^_`|~{}]\\", "", paragraph_text, fixed = TRUE)) %>%
+  mutate(NWORDS = str_count(paragraph_text, "\\S+")) %>%
+  group_by(text_id) %>%
+  filter(NWORDS > 20) %>%
+  mutate(n= n()) %>%
+  filter(n>2) %>%
+  filter(NWORDS < 600)
+  
+art_parg %>% head()
+
+text = art_parg$paragraph_text
+```
+
+
+```{r}
+transformations = data.frame(
+  text = c("it's","he's","she's","i'm","we're",
+           "they're","we're","you're","i've",
+                  "we've","you've","they've", "isn't",
+                  "aren't", "wasn't", "weren't", "haven't", "hasn't", "hadn't","won't",  "wouldn't",                   "don't","doesn't","didn't", "can't","couldn't","shouldn't","mightn't", "mustn't"),
+  replacement = c("it is","he is", "she is", "i am","we are","they are","we are","you are",
+                  "i have","we have", "you have", "they have","is not","are not","was not",
+                  "were not","have not","has not","had not", "will not", "would not","do not",
+                  "does not", "did not", "can not","could not", "should not","might not",
+                  "must not"
+                  )
+)
+
+
+for (k in 1:nrow(transformations)) {
+  for (j in 1: length(art_parg$paragraph_text)) {
+    art_parg$paragraph_text[j] <- str_replace_all(art_parg$paragraph_text[j], transformations[k,1],transformations[k,2])
+  }
+}
+```
+
+
+```{r}
+to_remove_cases=c("FURTHER INFORMATION", "FOR MORE INFORMATION","ABOUT THE AUTHOR","SCROLL FULLY DOWN", "SCROLL DOWN","READ THE TERMS", "READ TERMS","READ THE TERMS AND CONDITIONS","READ THE CONDITIONS","READ CONDITIONS", "MIGHT BE INTERESTED","ALSO BE INTERESTED IN","Note: ","READ MORE", "THIS BLOG","THIS WEBSITE", "MORE NEWS", "SIGN IN", "SIGN UP", "LOG IN", "LOGIN", "REGSITER IN", "REGISTERED USER", "TO REGISTER",
+"BE REGISTERED", "REGISTER FOR FREE", "REACHED YOUR LIMIT","ALREADY SUBSCRIBED","PHOTO BY","PHOTO CREATED BY", "PHOTO:", "PHOTO :", "IMAGE BY", "IMAGE CREATED BY", "IMAGE:", "IMAGE :", "/IMAGE", "/PHOTO","CLICK HERE", "SEE HERE", "SEE ALSO", "FURTHER READING","READ MORE","PLEASE CONTACT","CONTACT BELOW","CONTACT US","LINK BELOW","THIS LINK", "PHONE:","MAIL:","NAME:","NUMBER:","TITLE","TITLE IMAGE","IMAGE TITLE","BROWSE MORE", "LOOK FOR MORE","SEARCH FOR MORE","NOW READ","READ:", "PRINT THIS","FREE TRIAL","CONTACT US","ORDER NOW","ORDER TODAY","CLICK BELOW","FREE ACCOUNT","PREMIUM ACCOUNT","SORT BY","WRITTEN BY","PUBLISHED BY:",
+"ARTICLE CONTENT","ARTICLE CONTINUES","LIKE US ON","IN FUTURE ARTICLES","HAS BEEN WRITTEN","CHECK OUT SOME","CHECK OUT MORE","FOLLOW US","MORE HELP ON", "REFERENCE:","REFERENCES","CONTINUE READING","COMMENT BELOW","CONTRIBUTING:","IMAGE COPYRIGHT","ALL RIGHTS RESERVED","WEBSITE:","SEND THIS PAGE TO","FILE PHOTO","PHOTO HERE","STORY CONTINUES","STPRY BELOW", "SHARE THIS","THIS ARTICLE","SUBSCRIBE TO","LISTEN TO ARTICLE","EDITED BY","DOWNLOAD THE","ALSO READ","SUBSCRIBE TO","SHOW FULL","FREE TO MEMBERS","FREE FOR MEMBERS","ON YOUR DEVICE","READ OUR","YOUR INBOX", "WAS UPDATED","HAS BEEN UPDATED","SPECIAL THANKS", "CONTACT NUMBER","THIS STORY","RELATED","MORE RESOURCES","FEATURED IMAGE","REGISTER FOR","INC.")
+
+for (k in 1:length(tolower(to_remove_cases))) {
+  for (j in 1: length(art_parg$paragraph_text)) {
+    art_parg$paragraph_text[j] <- unique(str_remove_all(art_parg$paragraph_text[j], tolower(to_remove_cases)))
+    art_parg$paragraph_text[j] <- unique(str_remove_all(art_parg$paragraph_text[j], to_remove_cases))
+  }
+}
+
+```
+
+
+```{python}
+
+data = r.art_parg.paragraph_text
+
+model = SentenceTransformer('distilbert-base-nli-mean-tokens')
+embeddings = model.encode(data, show_progress_bar=True)
+
+umap_embeddings = umap.UMAP(n_neighbors=15, 
+                            n_components=5, 
+                            metric='cosine').fit_transform(embeddings)
+
+cluster = hdbscan.HDBSCAN(min_cluster_size=15,
+                          metric='euclidean',                      
+                          cluster_selection_method='eom').fit(umap_embeddings)
+
+
+# Prepare data
+umap_data = umap.UMAP(n_neighbors=15, n_components=2, min_dist=0.0, metric='cosine').fit_transform(embeddings)
+result = pd.DataFrame(umap_data, columns=['x', 'y'])
+result['labels'] = cluster.labels_
+
+# Visualize clusters
+fig, ax = plt.subplots(figsize=(20, 10))
+outliers = result.loc[result.labels == -1, :]
+clustered = result.loc[result.labels != -1, :]
+```
+
+
+
+```{r}
+art_parg <- read_csv("data/art_parg.csv")
+result <- read_csv("data/result.csv")
+DF = cbind(art_parg ,cluster = result$labels, x=result$x, y=result$y ) %>%
+  as.data.frame() %>%
+  select(Topic, cluster, x, y, NWORDS)
+
+ggplotly(
+  ggplot(DF) +
+    geom_point(aes(x = x, y = y, shape = factor(cluster), col = factor(Topic),size = NWORDS))
+)
+
+
+
+view(DF)
+```
+
+
+## This part is optional for further implementations and it canbe found automated
+
+```{r}
+for (k in unique(DF$cluster)) {
+  print(DF %>% filter(cluster == k ) %>% select(query, cluster, titles, paragraph_text,text_id))
+}
+```
+
+
+```{r}
+text_ID = DF$text_id[7] 
+ggplotly(
+  ggplot(DF %>% 
+         select(text_id, query, titles, NWORDS, keywords, cluster, TOP, paragraph_num) %>%
+         group_by(text_id, cluster) %>%
+         mutate(n = n()) %>%
+         filter(text_id == text_ID)) +
+  geom_histogram(aes(x = n, fill = factor(cluster)))
+  )
+```
+
+
+
+
+
+```{python}
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+
+def c_tf_idf(documents, m, ngram_range=(1, 1)):
+    count = CountVectorizer(ngram_range=ngram_range, stop_words="english").fit(documents)
+    t = count.transform(documents).toarray()
+    w = t.sum(axis=1)
+    tf = np.divide(t.T, w)
+    sum_t = t.sum(axis=0)
+    idf = np.log(np.divide(m, sum_t)).reshape(-1, 1)
+    tf_idf = np.multiply(tf, idf)
+
+    return tf_idf, count
+  
+tf_idf, count = c_tf_idf(docs_per_topic.Doc.values, m=len(data))
+
+
+
+def extract_top_n_words_per_topic(tf_idf, count, docs_per_topic, n=20):
+    words = count.get_feature_names()
+    labels = list(docs_per_topic.Topic)
+    tf_idf_transposed = tf_idf.T
+    indices = tf_idf_transposed.argsort()[:, -n:]
+    top_n_words = {label: [(words[j], tf_idf_transposed[i][j]) for j in indices[i]][::-1] for i, label in enumerate(labels)}
+    return top_n_words
+
+def extract_topic_sizes(df):
+    topic_sizes = (df.groupby(['Topic'])
+                     .Doc
+                     .count()
+                     .reset_index()
+                     .rename({"Topic": "Topic", "Doc": "Size"}, axis='columns')
+                     .sort_values("Size", ascending=False))
+    return topic_sizes
+
+top_n_words = extract_top_n_words_per_topic(tf_idf, count, docs_per_topic, n=20)
+topic_sizes = extract_topic_sizes(docs_df); topic_sizes.head(10)
+
+
+top_n_words [15][:10]
+top_n_words [10][:10]
+top_n_words [4][:10]
+top_n_words [16][:10]
+top_n_words [25][:10]
+top_n_words [12][:10]
+top_n_words [13][:10]
+top_n_words [7][:10]
+top_n_words [21][:10]
+```
+
+
+```{r}
+feedLDA <- data.frame(
+  doc_id = 1:length(Clustex),
+  text   = Clustex
+) %>%
+           unnest_tokens(input = text, output = word)  %>%
+           ungroup() %>%
+           anti_join(stop_words) %>%
+           filter(!str_detect(word, "\\d"))%>%
+           filter(nchar(word)>2)  %>%
+           mutate(word_lemma = textstem::lemmatize_words(word)) %>%
+           mutate(word_low= tolower(word_lemma)) %>%
+           select(-word, -word_lemma) %>%
+           set_names('doc_id','word') %>%
+           count(doc_id,word) %>%
+           bind_tf_idf(word, doc_id, n) %>%
+           arrange(desc(tf_idf))
+
+
+quant = quantile(feedLDA$tf_idf)
+feedLDA = feedLDA %>% 
+  filter(tf_idf >= quant[1]) %>% 
+  cast_dtm(document = doc_id, term=word, value=n)
+       
+l =  LDA_optimal(feedLDA, 2, 5, 4)
+l$Plot
+
+
+SEEDS = terms(l$stationary_prep$model, k=60) %>%
+  as.data.frame() 
+
+
+dup = c(SEEDS$`Topic 1`, SEEDS$`Topic 2`, SEEDS$`Topic 3`)
+dup = dup[duplicated(dup)]
+
+SEEDS = SEEDS %>%
+  filter(!`Topic 1` %in% dup) %>%
+  filter(!`Topic 2` %in% dup) %>%
+  filter(!`Topic 3` %in% dup)
+view(SEEDS)
+
+
+
+
+
+SEEDS_min = terms(l$stationary_prep$model, k=100) %>%
+  as.data.frame() 
+
+
+dup = c(SEEDS_min$`Topic 1`, SEEDS_min$`Topic 2`, SEEDS_min$`Topic 3`, SEEDS_min$`Topic 4`)
+dup = dup[duplicated(dup)]
+
+SEEDS_min = SEEDS_min %>%
+  filter(!`Topic 1` %in% dup) %>%
+  filter(!`Topic 2` %in% dup) %>%
+  filter(!`Topic 3` %in% dup) %>%
+  filter(!`Topic 4` %in% dup) 
+view(SEEDS_min)
+```

@@ -1,0 +1,115 @@
+---
+title: "One Document Analysis"
+author: "Ali FRADY"
+date: "13/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("Imports/03- R dependencies.R")
+source("Imports/03 - R functions.R")
+source_python("Imports/03 - pyDependencies.py")
+```
+
+
+```{r}
+news <- readRDS('data/BBC_Reuters_GoogleNews_articles_business.rds')
+article <- news$Body[30000]
+article
+```
+
+
+**Startover**
+
+```{r}
+
+ art_parg= data.frame(
+  paragraph_text =unlist(tokenize_sentence(article))
+) %>%
+    rowid_to_column(var = "paragraph_num")
+art_parg$paragraph_text <- as.character(art_parg$paragraph_text)
+Extract_Named_Entities(art_parg) 
+```
+
+
+
+```{r}
+art_rm_NE = NE_Cleansing(art_parg, 'paragraph_num', 'paragraph_text', group = TRUE, rm=FALSE,    Extract_Named_Entities(art_parg) %>% filter(Label %in% c("GPE", "ORG", "PERSON","LOC",'NORP')) %>% select(-Label) %>% unique())
+
+art_rm_NE
+```
+
+
+```{r}
+df = art_rm_NE %>%
+    select(paragraph_num, TEXT) %>%
+    unnest_tokens(input = TEXT, output = word)  %>%
+    mutate(word = str_remove_all(word,"'s$")) %>%
+    mutate(word = str_remove_all(word,"^the"))%>%
+    mutate(word = str_remove_all(word,"^The"))%>%
+    mutate(word = textstem::lemmatize_words(word)) %>%
+    mutate(word= tolower(word)) %>%
+    filter(!str_detect(word, '^\\d')) %>%
+    filter(!str_detect(word, '^\\d[a-z][a-z]')) %>%
+    anti_join(tidytext::stop_words) %>%
+    filter(nchar(word) > 2) %>%
+    purrr::set_names('id','word') %>%
+    dplyr::count(id, word)
+
+df
+
+```
+
+
+
+
+```{r}
+df_lemma = df %>%
+    mutate(word = str_remove_all(word,"'s$")) %>%
+    mutate(word = textstem::lemmatize_words(word)) %>%
+    mutate(word= tolower(word)) %>%
+    anti_join(tidytext::stop_words) %>%
+    filter(nchar(word) > 2) %>%
+    purrr::set_names('id','word','n') %>%
+    dplyr::count(id, word)
+
+dtm = df_lemma %>%
+  tidytext::cast_dtm(document=id, term=word, value=n)
+
+dtm
+
+mod = LDA_optimal(dtm, 2, 10, 5)
+mod$Plot
+
+```
+
+
+
+```{r}
+terms = terms(mod$min_perp$model, k=20) %>%
+  as.data.frame() %>%
+  gather( topic, word,`Topic 1`:`Topic 3`, factor_key=FALSE) %>%
+  left_join(
+    df
+  ) %>%
+  filter(!is.na(n)) %>%
+  select(-id) %>%
+  group_by(topic, word) %>%
+  mutate(n = sum(n))%>%
+  unique()
+
+terms(mod$stationary_prep$model, k=20) %>%
+  as.data.frame() 
+
+wordcloud(words = terms$word, freq = terms$n, min.freq = 1,
+                    max.words=40, random.order=FALSE, rot.per=0.1, 
+                    ordered.colors=TRUE,
+                     colors=brewer.pal(8, "Dark2")[factor(terms$topic)])
+```
+
+
+

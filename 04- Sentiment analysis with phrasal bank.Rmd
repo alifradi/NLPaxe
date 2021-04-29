@@ -1,0 +1,525 @@
+---
+title: "Lab_37_python_spacy"
+author: "Ali FRADY"
+date: "26/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r imports message = FALSE echo = FALSE}
+source("Imports/04- R dependencies.R")
+```
+
+```{r message = FALSE echo = FALSE}
+pdf_path <- "pdf/Halliburton Announces First Quarter 2020 Results.pdf"
+```
+
+
+## PDF Meta Data
+
+About the PDF.
+
+```{r message = FALSE echo = FALSE}
+pdf_info(pdf_path)
+```
+
+```{r message = FALSE echo = FALSE}
+pdf_length(pdf_path)
+```
+
+## Working with Images
+
+### Magick
+
+_Resources:_ https://docs.ropensci.org/magick/
+
+#### Read PDF
+
+```{r message = FALSE echo = FALSE}
+img_page_1 <- image_read_pdf(pdf_path, page = 1)
+
+img_page_1 %>% image_scale('600')
+```
+
+#### Write to PNG
+
+```{r message = FALSE echo = FALSE}
+img_page_1 %>%
+  image_scale('600') %>%
+  image_write(path = 'img/page1.png', format = 'png')
+```
+
+#### Read PNG
+
+```{r message = FALSE echo = FALSE}
+image_read('img/page1.png')
+```
+
+
+## PDF Text Data
+
+### Extract data
+```{r message = FALSE echo = FALSE}
+text_data <- pdf_text(pdf_path)
+text_data
+```
+
+### Parsing Text into Paragraphs
+
+```{r message = FALSE echo = FALSE}
+paragraph_text_tbl <- tibble(
+  #page Text
+  page_text = text_data
+) %>%
+  rowid_to_column(var = "page_num") %>%
+  #Paragraph Text
+  mutate(paragraph_text = str_split(page_text, pattern = "\\.\r")) %>%
+  select(-page_text) %>%
+  unnest(paragraph_text) %>%
+  rowid_to_column(var = "paragraph_num") %>%
+  select(page_num, paragraph_num, paragraph_text)
+
+paragraph_text_tbl
+```
+
+
+### Compare Text to Paragraphs
+
+```{r message = FALSE echo = FALSE}
+image_read_pdf("pdf/Halliburton Announces First Quarter 2020 Results.pdf", pages = 6) %>%
+  image_scale("600")
+```
+
+
+```{r message = FALSE echo = FALSE}
+paragraph_text_tbl %>%
+  filter(page_num == 6)
+```
+
+## Prepare Text for Sentiment Analysis
+
+### Paragraphs to Test
+
+```{r message = FALSE echo = FALSE}
+paragraph_1 <- paragraph_text_tbl %>%
+  slice(1) %>%
+  pull(paragraph_text)
+
+paragraph_2 <- paragraph_text_tbl %>%
+  slice(2) %>%
+  pull(paragraph_text)
+```
+
+```{r message = FALSE echo = FALSE}
+paragraph_1
+```
+
+```{r message = FALSE echo = FALSE}
+paragraph_2
+```
+
+
+### Corpus for Sentiment Model
+
+Source: https://www.researchgate.net/publication/251231364_FinancialPhraseBank-v10
+
+```{r paged.print = FALSE}
+financial_corpus_tbl <- read_delim(
+  "data/FinancialPhraseBank-v1.0/Sentences_AllAgree.txt",
+  delim = "@",
+  col_names = FALSE
+) %>%
+  set_names(c("paragraph_text","sentiment")) %>%
+  select(sentiment, paragraph_text) %>%
+  mutate(sentiment = case_when(
+    sentiment == "neutral"  ~  0,
+    sentiment == "positive" ~  1,
+    sentiment == "negative" ~ -1
+  ))
+
+financial_corpus_tbl
+```
+
+
+### Fix Issues
+
+```{r}
+financial_corpus_tbl %>%
+  slice(7)
+```
+
+
+```{r message = FALSE echo = FALSE}
+financial_corpus_clean_tbl <- financial_corpus_tbl %>%
+  filter(!paragraph_text %>% str_detect("\\+")) %>%
+  mutate(paragraph_text = str_remove_all(paragraph_text, "\\`"))
+
+financial_corpus_clean_tbl
+```
+
+# Python (TEXT SENTIMENT)
+
+## Imports
+
+```{r message = FALSE echo = FALSE}
+source_python("Imports/04 - pyDependencies.py")
+```
+
+
+## Getting Paragraphs from R
+
+
+```{python message = FALSE echo = FALSE}
+p1 = r.paragraph_1
+p1
+```
+
+
+```{python message = FALSE echo = FALSE}
+p2 = r.paragraph_2
+p2
+```
+
+```{python message = FALSE echo = FALSE}
+df_financial = r.financial_corpus_clean_tbl
+df_financial
+```
+
+
+## Spacy Quick Tutorial
+
+### Word Tokenization
+
+```{python message = FALSE echo = FALSE}
+# load English tokenizer, tagger, parser, NER, and word vectors
+
+nlp = English()
+
+# "nlp" Object is used to create documents with linguistic annotations.
+
+doc1 = nlp(p1)
+
+# Create list of words tokens
+token_list = []
+for token in doc1:
+  token_list.append(token.text)
+
+print(token_list)
+```
+
+
+### Sentence Tokenization
+
+```{python message = FALSE echo = FALSE}
+# load English tokenizer, tagger, parser, NER, and word vectors
+nlp = English()
+
+# Create the pipeline 'sentencizer' component
+sbd = nlp.create_pipe('sentencizer')
+
+# Add the component to the pipeline
+nlp.add_pipe(sbd)
+
+# "nlp" Object is used to create documents with linguistic annotations.
+doc = nlp(p1)
+
+# Create list of sentence tokens
+
+
+sents_list = []
+for sent in doc.sents:
+  sents_list.append(sent.text)
+  
+counter = 1
+for sent in sents_list:
+  print(str(counter)+'. '+ sent)
+  counter +=1
+```
+
+### Removing Stop Words
+
+```{python message = FALSE echo = FALSE}
+spacy_stopwords = spacy.lang.en.stop_words.STOP_WORDS
+
+print('Number of stop words: %d' % len(spacy_stopwords))
+print('First ten stop words: %s' % list(spacy_stopwords)[:10])
+```
+
+
+
+```{python message = FALSE echo = FALSE}
+doc = nlp(p1)
+
+filtered_sent =[]
+for word in doc:
+  if word.is_stop == False:
+    filtered_sent.append(word)
+
+print("Filtered Sentence:\n", filtered_sent)
+```
+
+### Word Stemming (Lemmatization)
+
+```{python message = FALSE echo = FALSE}
+nlp = English()
+
+# implementing lemmatization
+lem_test = nlp("Apples and oranges are similar. Boots and hippos aren't")
+
+# Finding lemma for each word
+for word in lem_test:
+  print(word.text, word.lemma_)
+```
+
+## Sentiment Model (Classification)
+
+Here's where the fun happens!
+
+### Tokenizer Setup
+```{python message = FALSE echo = FALSE}
+# Create our list of punctuation marks
+punctuations = string.punctuation
+
+# Create our list of stopwords
+stop_words = spacy.lang.en.stop_words.STOP_WORDS
+# Load English tokenizer, tagger, parser, NER, and word vectors
+parser = English()
+```
+
+
+### Make Spacy Tokenizer
+
+```{python message = FALSE echo = FALSE}
+# Creating our tokenizer function
+def spacy_tokenizer(sentence):
+  # Create our token object, which is used to create documents with linguistic annotations.
+  mytokens = parser(sentence)
+  
+  # Lemmatizing each token and converting each token into lowercase
+  mytokens = [ word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ for word in mytokens]
+  
+  # Removing stop words
+  mytokens = [ word for word in mytokens if word not in stop_words and word not in punctuations]
+  
+  # return preprocessed list of tokens
+  return mytokens
+```
+
+
+
+```{python message = FALSE echo = FALSE}
+sent = "Hey, this is a complex series of sentences. One with lots of WORDS in each sentence."
+spacy_tokenizer(sent)
+```
+
+
+### Bag of words Vectorizer
+
+
+```{python message = FALSE echo = FALSE}
+bow_vector = CountVectorizer(tokenizer = spacy_tokenizer, ngram_range = (1,1))
+```
+
+
+```{python message = FALSE echo = FALSE}
+transformed = bow_vector.fit_transform(spacy_tokenizer(sent))
+transformed
+```
+
+
+```{python message = FALSE echo = FALSE}
+transformed.toarray()
+```
+
+```{python message = FALSE echo = FALSE}
+bow_vector.get_feature_names()
+```
+
+### Train / Test
+
+```{python message = FALSE echo = FALSE}
+X = df_financial['paragraph_text']
+y = df_financial['sentiment']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 123)
+```
+
+```{python message = FALSE echo = FALSE}
+X_train
+```
+
+
+```{python message = FALSE echo = FALSE}
+X_test
+```
+
+#### Classification Model - Logistic Regression
+
+
+```{python message = FALSE echo = FALSE}
+# Logistic Regression Classifier & Tokenization Setup
+bow_vector = CountVectorizer(tokenizer = spacy_tokenizer, ngram_range = (1,1))
+classifier = LogisticRegression()
+
+# Create pipeline using Bag of Words
+pipe = Pipeline([('vectorizer', bow_vector),
+                 ('classifier', classifier)])
+
+# Model generation
+pipe.fit(X_train, y_train)
+```
+
+
+```{python message = FALSE echo = FALSE}
+predicted = pipe.predict(X_test)
+
+# Model Accuracy
+print("Logistic Regression Accuracy: ", metrics.accuracy_score(y_test, predicted))
+```
+
+
+```{python message = FALSE echo = FALSE}
+X_test
+```
+
+
+```{python message = FALSE echo = FALSE}
+predicted[:10]
+```
+
+
+
+```{python message = FALSE echo = FALSE}
+X_test[:10]
+```
+
+
+### Predict Halliburton Paragraphs
+
+```{python message = FALSE echo = FALSE}
+pipe.predict(pd.Series([p1,p2]))
+```
+
+
+```{python message = FALSE echo = FALSE}
+df = r.paragraph_text_tbl
+df
+```
+
+```{python message = FALSE echo = FALSE}
+halliburton_predictions = pipe.predict(df['paragraph_text'])
+halliburton_predictions
+```
+
+
+## Sentiment Model [Regression]
+
+### Regression Model - Linear Regression
+
+```{python message = FALSE echo = FALSE}
+# Logistic Regression Classifier
+classifier = LinearRegression()
+
+# Create pipeline using Bag of words
+pipe_2 = Pipeline([('vectorizer', bow_vector),
+                   ('classifier', classifier)])
+# Model generation
+pipe_2.fit(X_train, y_train)
+```
+
+
+```{python message = FALSE echo = FALSE}
+predicted_2 = pipe_2.predict(X_test)
+
+# Model Accuracy
+print("Linear Regression MAE:", metrics.mean_absolute_error(y_test, predicted_2))
+```
+
+```{python message = FALSE echo = FALSE}
+halliburton_predictions_2 = pipe_2.predict(df['paragraph_text'])
+halliburton_predictions_2
+```
+
+# Visualization (Back to R)
+
+```{r message = FALSE echo = FALSE}
+
+sentiment_predictions_tbl <- paragraph_text_tbl %>%
+mutate(
+sentiment_classification = py$halliburton_predictions,
+sentiment_regression = py$halliburton_predictions_2
+)
+
+sentiment_predictions_tbl
+```
+
+## Which Paragraph are most Negative?
+
+```{r message = FALSE echo = FALSE}
+data_prepared_tbl <- sentiment_predictions_tbl %>%
+  mutate(
+    label = str_glue(
+      "Page: {page_num}
+      Paragraph: {paragraph_num}
+      Sentiment: {round(sentiment_regression)}
+      ---
+      {paragraph_text}"
+    )
+  )
+```
+
+
+```{r message = FALSE echo = FALSE}
+g <- data_prepared_tbl %>%
+  mutate(
+    sentiment_classification = case_when(
+      sentiment_classification == 0 ~ "neutral",
+      sentiment_classification == 1 ~ "positive",
+      sentiment_classification ==-1 ~ "negative",
+    ) %>% factor(levels = c("negative","neutral","positive"))) %>%
+  ggplot(aes(sentiment_classification,sentiment_regression, color = sentiment_regression)) +
+  geom_point(aes(text = label, size = abs(sentiment_regression))) +
+  scale_color_viridis_c() +
+  theme_tq()+
+  coord_flip()
+ggplotly(g, tooltip = "text")
+```
+
+## Which Pages are Most Negative
+```{r message = FALSE echo = FALSE}
+g <- data_prepared_tbl %>%
+  mutate(page_factor = page_num %>% as_factor() %>% fct_reorder(sentiment_regression)) %>%
+  ggplot(aes(page_factor, sentiment_regression, color = sentiment_regression)) +
+  geom_point(aes(text = label, size = abs(sentiment_regression))) +
+  scale_color_viridis_c()+
+  theme_tq()+
+  coord_flip()+
+  labs(
+    title = "Sentiment By Page Number",
+    x = "Page Number", y = "Sentiment Score"
+  )
+
+ggplotly(g, tooltip = "text")
+```
+
+# Save Python Models
+
+
+```{python }
+import joblib
+```
+
+```{python}
+joblib.dump(pipe, "models/pipe_logistic_regression.sav")
+```
+
+```{python}
+joblib.dump(pipe_2, "models/pipe_linear_regression.sav")
+```
+```{python}
+joblib.load("models/pipe_logistic_regression.sav")
+```

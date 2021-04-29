@@ -1,0 +1,327 @@
+---
+title: '00- Collecting data from web'
+author: 'Ali FRADY'
+date: '02/12/2020'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Imports**
+
+```{r include=FALSE}
+source("Imports/00 - R dependencies.R")
+source("Imports/00 - R dependencies.R")
+source_python("Imports/00 - pyDependencies.py")
+source_python("Imports/00 - scrapGoogle.py")
+source_python("Imports/00 - scrapNewsAggregators.py")
+
+```
+
+## Building queries
+
+**From gloassary **
+
+https://businessfraudprevention.org/glossary-of-fraud-terms/
+
+
+```{r queries, message=FALSE, include=FALSE, paged.print=FALSE}
+
+Asset_misappropriation <- c(
+'"Asset misappropriation"',
+'"stealing receipts"',
+'"stealing assets"',
+'"disbursement fraud"'
+)
+
+
+Asset_Fraud<- c(
+'"Asset Fraud"',
+'"falsely recorded assets"',
+'"falsely recorded revenue"',
+'"Revenue Fraud"'
+)
+
+Understatement_of_Assets <- c(
+  '"Understatement Revenues"', 
+  '"Understatement Liabilities"'
+)
+
+Bid_rigging <- c(
+  '"Bid rigging"',
+'"collusive fraud"',
+'"illegal contract" AND "competitive bidding"',
+' "illegal contract without competitive bidding"'
+)
+
+billing_scheme <- c(
+'"fraudulent payment to employee" ',
+'"fraudulent payment" AND "employee"' 
+)
+
+Bribery <- c(
+'"Bribery"',
+'"soliciting value to influence act"',
+'"bribe to influence act"',
+'"Conflicts of Interest"',
+'"Economic Extortion"',
+'"Illegal Gratuities"'
+)
+
+Embezzlement <- c(
+'"embezzlement of public funds"'
+)
+
+fictitious_expense <- c(
+'"fictitious expense"',
+'"fake receipts"',
+'"novelty receipts"'
+)
+
+Fictitious_revenues <- c(
+'"Fictitious revenues"',
+'"false sale"'
+)
+
+Fraud_prevention <- c(
+'"Fraud prevention"',
+'deter fraud from occurring'
+)
+
+Financial_Statement_Fraud <-c(
+  'Financial Statement Fraud',
+'"financial misstatement"',
+'"omitting facts" AND "financial statements"',
+'"omitting facts financial statements"',
+'"omitting disclosures"',
+'"misstating amounts"',
+'"misapplying GAAP"'
+)
+
+Front_Loading <- c('Front Loading')
+
+ground_floor_opportunity <- c('ground floor opportunity',
+                              'Tax haven')
+
+
+
+
+
+Invoice_kickbacks <- c(
+'Invoice kickbacks',
+'overstated price"',
+'illeagal gratuities'
+)
+
+Kiting_fraud <- c(
+'"Kiting fraud"',
+'conceal cash shortages'
+)
+
+
+occupational_fraud <- c(
+ 'occupational fraud and abuse'
+)
+
+
+Purchase_schemes <- c(
+  "false invoicing"
+)
+
+fictitious_sales <- c(
+'fictitious sales',
+'altering sales receipts ',
+'altering commission rates'
+)
+
+shell_company <- c(
+'shell company',
+'mirror an existing company',
+'spelling deviation in the name of a company')
+
+Segregation_duties <- c(
+  'Segregation of duties'
+)
+
+Tax_fraud <- c(
+'Tax fraud',
+'excise tax',
+'violating duty of income tax returns',
+'cheat accounting calculations of net income'
+)
+
+Vendor_Fraud <- c(
+'Vendor Fraud',
+ 'overcharge for purchased goods',
+'shipment of inferior goods',
+'non-shipment of paid goods'
+)
+
+White_collar_criminals <- c(
+  'White-collar criminals'
+)
+
+
+Counterintelligence <- c(
+  'Counterintelligence'
+)
+
+
+topic_name <- c(
+  'Asset_misappropriation', 'Asset_Fraud', 'Understatement_of_Assets',
+         'Bid_rigging', 'billing_scheme', 'Bribery', 'Embezzlement', 'fictitious_expense',
+         'Fraud_prevention', 'Financial_Statement_Fraud', 'Front_Loading', 
+         'ground_floor_opportunity',  
+         'Invoice_kickbacks', 'Kiting_fraud', 'occupational_fraud', 'Purchase_schemes',
+         'Purchase_schemes', 'fictitious_sales', 'shell_company', 'shell_company',
+         'Segregation_duties', 'Tax_fraud', 'Vendor_Fraud', 'White_collar_criminals',
+         'Counterintelligence'
+)
+
+```
+
+**Aggregating queries/topics to model**
+based on similarities, human interpretation and listing of most impacting events that happened in the last decades
+
+```{r queries, message=FALSE, include=FALSE, paged.print=FALSE}
+
+suspect <- c(
+"extended confiscation",
+"land confiscation",
+"value confiscation",
+"special confiscation",
+"freeze of properties",
+"prohibit transfer",
+"prohibit movement of money",
+"Shell company",
+"Shell Bank",
+#------------
+"massive Siemens corruption scandal",
+"'Sani Abacha' AND 'corruption'",
+"'Najib Razak' AND 'Malaysia' AND 'shell companies'",
+"'PDVSA' AND 'corruption'",
+"'Mossack Fonseca' AND 'shell companies' AND 'Panama papers'",
+"dodgy tourism deals in the Maldives",
+"'troika dialog' AND 'tax havens'",
+"'Andrej Babiš' AND 'Conflict of interest'"
+)
+
+Terrorism <- c(
+  "commit terrorist acts",
+  "'criminal activities' AND 'Business'",
+  "Organized criminal group and  racketeering",
+  "terrorist financing",
+  "trafficking in human beings",
+  "migrant smuggling",
+  "sexual exploitation",
+  "trafficking in narcotic drugs",
+  "trafficking in psychotropic substances",
+  "arms trafficking",
+  "trafficking in stolen and other goods",
+  "'kidnapping' AND 'business'",
+  "illegal restraint and hostage-taking",
+  #------
+  "Blackwater mercenary",
+  "Wagner mercenary",
+  "Blackshield army",
+  "D4S army"
+)
+
+financialCrime <- c(
+  "counterfeiting currency",
+  "counterfeiting and piracy of products",
+  "environmental crime",
+  "excise duties and taxes",
+  "forgery",
+  "insider trading and market manipulation",
+  "forfeiture or confiscation determination",
+  "tax crimes"
+)
+
+
+Fraud <- c("Asset misappropriation", "Asset Fraud", 'Understatement of Assets',
+         'Bid rigging', 'billing scheme', 'Bribery', 'Embezzlement', 'fictitious expense',
+         'Fraud prevention', 'Financial Statement Fraud', 'Front Loading', 
+         'ground floor opportunity', 
+         'Invoice kickbacks', 'Kiting fraud', 'occupational fraud', 'Purchase schemes',
+         'Purchase schemes', 'fictitious sales',
+         'Segregation duties', 'Tax fraud', 'Vendor Fraud', 'White collar criminals',
+         'Counterintelligence',
+         #------
+         "'Alberto Fujimori' AND 'Embezzlement' AND 'public relations'",
+         "'Chechnya' AND 'bribe' AND 'job'",
+         "'monopoly' AND 'corruption' AND 'ruling family'",
+         "'President Ricardo Martinelli' AND 'embezzlement'",
+         "'The Russian Laundromat'",
+         "'Correa' AND 'Mariano Rajoy' AND 'illicit'",
+         "'Gupta family' AND 'corruption'", 
+         "' Petrobras and Odebrecht' AND 'lava jato'"
+)
+
+topic_name <- c(
+ "suspect", "Terrorism", "financialCrime", "Fraud"
+)
+```
+
+## Generate pagination links for google news
+
+```{r}
+req_GOOG(query = "extended confiscation", pages = seq(from = 0, to = 190, by = 10))
+```
+## Getting articles' links from google news researching
+
+```{r}
+Articles_by_topic(query = "extended confiscation", pages = seq(from = 0, to = 10, by = 10))
+```
+## Store scrapped information:
+into a dataframe that collects the query, the source link, the title, the body and keywords 
+```{r}
+get_news(query = "extended confiscation", pages = seq(from = 10, to = 20, by = 10))
+```
+
+## Loop over all queries/topics and save to local storage
+
+```{r}
+max_pagination = 5
+for (name in topic_name) {
+  reqGOOG <-c(get(name))
+  pb <- winProgressBar(title = paste0("Googling for ", name), min = 0,max = length(reqGOOG), width = 700)
+  df <- data.frame()
+  i<-1
+  for (k in reqGOOG) {
+    for (j in 0:(max_pagination-1)) {
+      setWinProgressBar(pb, i, title=paste0('Topic: ', name, ' Query: ',k,' Pagination: ', j+1 ))
+      try(
+        df <- df %>%
+          rbind(
+            as.data.frame(
+              get_news(query = k, pages = seq(from =  j, to = (j*10)+10, by= 10))
+              )
+            )
+        )
+    }
+    i <- i+1
+    print("sleeping...")
+    Sys.sleep(sample(1:5,1))
+  }
+  close(pb)
+  saveRDS(df,paste0('data/',name,as.character(Sys.Date()),".rds") )
+  print(paste("saved",name,as.character(Sys.Date()),".rds"))
+  
+}
+```
+
+## Preview of dataset we collected
+
+```{r}
+df %>%
+  tibble() %>%
+  head()
+```
+
+
+
+
+

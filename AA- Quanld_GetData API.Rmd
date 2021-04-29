@@ -1,0 +1,34 @@
+---
+title: "Quandl"
+author: "Fatma"
+date: "3/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(Quandl)
+```
+
+
+```{r}
+oil <- Quandl("OPEC/ORB")
+plot(oil)
+```
+```{r}
+SP_500<- Quandl("MULTPL/SP500_DIV_YIELD_MONTH")
+plot(SP_500)
+```
+
+```{r}
+Quandl.api_key("Your_API_key")
+
+SP_500<- Quandl("BCIW/_INX")
+plot(SP_500)
+
+```
+

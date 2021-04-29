@@ -1,0 +1,856 @@
+---
+title: "automatization of the topic modeling process"
+author: "Fatma"
+date: "2/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**LIBRARIES & NEEDED FUNCTIONS**
+
+```{r include=FALSE}
+source("Imports/05- R dependencies.R")
+source("Imports/05 - R jobs.R")
+source_python("Imports/00 - pyDependencies.py")
+source_python("Imports/05 - pyDependencies.py")
+source_python("Imports/00 - scrapGoogle.py")
+```
+
+
+*Defining Queries*
+
+
+```{r}
+
+International_Footprint<- c(
+  '"international" AND "footprints"',
+  '"exporting" AND  "goods"',
+  'Exports',
+  '"company" AND "international" AND "expansion"',
+  '"exporting" AND "ecosystem"',
+  '"international" AND "entanglement" AND "of" AND "corporation"' ,
+  '"amount" AND "of" AND "foreign" AND "sales"',
+  '"INTERNATIONAL" AND"CHAMBER" AND "OF" AND"COMMERCE"',
+ ' "company" AND "integration" AND "of" AND "e-commerce"',
+  '"global" AND "firms"',
+  "cross-boundary",
+  "Imports",
+  '"target-country" AND "labor"',
+  '"Foreign" AND "Business"',
+ '"foreign" AND "activities"',
+ '"foreign" AND "subsidiaries"',
+  '"Open"AND  "Markets" AND "Index" AND "company"',
+  '"Imports" AND "expansion"',
+  '"global" AND "economy"',
+  "subsidiaries",
+  '"export-Imports" AND "balance"',
+  '"expansion" AND "target" AND "country"',
+  '"Foreign" AND "market"',
+  '"foreign" AND "affiliates"',
+  '"geographical" AND "variation" AND "of" AND "corporate"',
+  '"company" AND "Tariff" AND "binding" AND "levels"',
+  '"national" AND"level"',
+  "branches",
+ ' "non-nationals" AND "board" AND "of" AND "directors"',
+  '"expansion" AND "target" AND "industry"',
+  '"Foreign" AND "client"',
+  '"number" AND "of" AND "countries"AND  "company"  AND "active" ',
+  '"psychic" AND "dispersion" AND "market"',
+  '"cross-border" AND "goods"',
+  '"international" AND "level"',
+  '"multinational" AND "firms"',
+  '"international" AND "sources" AND "of" AND "revenue"',
+  '"international" AND "demand"',
+  '"corporate" AND "internationalisation"',
+ ' "non-capital" AND "involvements"AND  "abroad"',
+  '"transnationality" AND "index" AND "company"',
+  '"cross-border" AND "services"',
+  '"shares" AND "owned" AND "by" AND "foreigners"',
+ ' "Emerging" AND "markets"',
+  '"decreased" AND "trade" AND"barrierss"',
+  '"insufficient"  AND "market" ',
+  '"international" AND "organisations"',
+  '"foreign" AND "employees"',
+  '"company" AND "FDI" AND "openness"',
+  '"company"AND  "Trade" AND "Openness"',
+  '"overseas" AND "market"',
+  '"satured" AND "market" ',
+  '"internationalised" AND "company"',
+  '"stock" AND "markets" AND "company" AND "listed"',
+  '"trade" AND "union" AND "company"',
+  '"company" AND "Trade-enabling" AND "infrastructure"',
+  '"company"  AND "foreign" AND "direct" AND "investment" AND "openness"',
+  '"company" AND "Trade" AND "Policy"',
+  '"transactions" AND "between" AND "countries"' ,
+  '"across" AND "traditional" AND "borders"',
+  '"customer" AND "diversity"',
+  '"exporting" AND "companies"',
+  '"corporate" AND "globalisation"',
+ ' "foreign" AND "assets"',
+  '"activity" AND "Spread" AND "Index" AND "company"',
+  '"cross-border" AND "capital" ' ,
+  '"geographically" AND "dispersed" AND "economy"',
+  "offshoring",
+ ' "international" AND "investors"',
+  '"global" AND "marketplace"',
+  '"transborder" AND "activities" AND "of" AND "corporations"',
+ ' "value" AND "added" AND "abroad"',
+  '"production" AND "abroad" ',
+  '"cross-border" AND "labour"',
+  '"business" AND "processes" AND "jurisdiction"',
+  '"international" AND "market"AND  "opportunity"',
+  '"expand" AND "operations" AND "internationaly" ',
+  '"Multinational" AND "Corporations"',
+  '"sourcing" AND "abroad"',
+  '"foreign" AND "manoeuvres"',
+  '"company" AND "Foreign" AND "direct" AND "investment" ')
+
+
+
+HR_Managment <-c(
+  "Leadership",
+  "Management",
+  '"delay"  AND "to" AND "complete" AND  "projects"',
+  '"traditional" AND  "HR" AND  "KPI"',
+  '"Employee" AND  "retention"',
+  '"Application" AND  "Completion"  AND "Rate"',
+  '"recruiting"  AND "pitch"',
+  '"Candidates" AND  "per"  AND "Hire"',
+  '"Cost"  AND "per"  AND "Hire"',
+  '"Employee"  AND "Referrals"',
+  '"employee" AND  "Number" AND  "of"  AND "units"  AND "produced"',
+  '"EMPLOYEE"   AND "number"  AND "of" AND  "bugs" AND  "in"  AND "software" AND  "code"',
+  '"fire"  AND "employee"' ,
+  '"manager"  AND "level"',
+  '"worst"  AND "employee"',
+  "Leader" ,
+  "Manager",
+  '"failure"  AND "to" AND  "complete"  AND "projects"',
+  '"HR" AND  "metrics"',
+  '"employee" AND  "retention" AND  "metrics"',
+  '"Recruiting" AND  "Metrics"',
+  '"Candidate" AND  "Call"  AND "Back"  AND "Rate"',
+  '"Hiring"  AND "managers"',
+  '"total"  AND "recruiting" AND  "costs"',
+  '"Fill" AND  "Rate"',
+  '"employee" AND  "Handling" AND  "time" AND  "capacity"', 
+  '"employee" AND  "Net" AND  "promoter" AND  "score"', 
+  "NPS",
+  '"Employee" AND  "happiness"',
+  '"employee" AND  "performance" AND  "review"',
+  '"best"  AND "employee"',
+  '"interviewing"  AND "candidates"',
+  '"increased" AND  "standardization" AND  "of"  AND "employee"  AND "performance"', 
+  '"Quality" AND  "of"  AND "Hire"',
+  '"employee"  AND  "contact" AND "quality"',
+  '"assess" AND  "sales"  AND "employees"',
+  '"Voluntary" AND  "turnover" AND  "rate"',
+  '"employee"  AND  "performance"' ,
+  '"replaced"  AND "by" AND  "the"  AND "top" AND  "applicants"',
+  '"Hiring"  AND "Vision"',
+  "staffing" ,
+  '"Missed" AND  "performance"  AND  "goals"',
+  '"Employees" AND  "with"  AND "high" AND  "performan"',
+  '"employee"  AND "current" AND  "job"' ,
+  '"abandoned"  AND "job"  AND "application"',
+  '"success"  AND  "recruiting"  AND "efforts"',
+  '"9-box"  AND "grid"',
+  '"employee" AND  "Number"  AND "of" AND  "errors"',
+  '"Sourcing"  AND "Channel"  AND "Effectiveness"',
+  '"employee"  AND "performance"  AND "review"  AND "practice"',
+  '"360-degree" AND  "feedback"',
+  '"involuntary" AND  "turnover" AND  "rate"',
+  '"employee" AND  "potential"',
+  '"employee" AND  "number" AND  "of"  AND "sales"',
+  '"Hiring" AND  "Process"',
+  '"organizational"  AND "goals"',
+  '"Low" AND  "morale"',
+  '"employee"  AND "behavior"',
+  '"recruiting" AND  "impact"',
+  '"boost" AND   "performance"',
+  "pitfalls",
+  '"trust"  AND  "employees"',
+  '"employee" AND   "performance" AND  "evaluation"',
+  '"likely"  AND "to" AND   "depart"  AND "the" AND  "job"',
+  '"soft" AND  "skills"',
+  "Communication",
+  '"Revenue" AND  "per" AND  "employee"',
+  '"employee" AND  "points"  AND  "improvement"',
+  '"hiring" AND  "practices"',
+  '"EMOTIONAL" AND  "INTELLIGENCE"',
+  '"knowledge" AND  "equipped"  AND "employees" ',
+  '"resources" AND  "equipped" AND  "employees"',
+  '"employee" AND  "Work" AND  "quality"',
+  '"employee" AND  "turnover"',
+  "Self-Awareness",
+  '"skills"  AND "equipped"  AND "employees"' ,
+  "NEGOTIATION",
+  '"employee"  AND "work"  AND "quantity"' ,
+  '"employee" AND  "attrition"  AND "rate"',
+  '"daily"  AND "tasks"',
+  '"Delegate" AND  "Work"',
+  '"New" AND  "employee" AND  "satisfaction" AND  "rate"',
+  '"EMPLOYEE"  AND "ENGAGEMENT"',
+  '"Profit" AND  "per" AND  "employee"',
+  '"employee"  AND "skill"  AND "level"' ,
+  '"Talent" AND  "turnover" AND  "rate"',
+  '"guide" AND  "change"',
+  "responsibilities",
+  '"Lost"  AND "sales"',
+  '"High-performance"  AND "employee"',
+  '"human" "resources"  AND "strategy"',
+  '"successful"  AND "application" AND  "submissions"',
+  "Recruiting",
+  '"laid-off" AND  "employee"',
+  '"employee" AND  "product"  AND "defects"',
+  '"Time" AND  "to" AND  "Hire"',
+  '"human"  AND "capital" AND  "ROI"',
+  '"multi-perspective"  AND  "employee"  AND  "performance"',
+  '"employee"  AND "experience"',
+  "Self-Regulation",
+  '"learning" AND  "experience"',
+  '"professional" AND  "network"',
+  '"employe"  AND "work" AND  "efficiency"', 
+  '"lack" "of"  AND "professional" AND  "development"',
+  '"observe" AND  "employees"' ,
+  '"Absenteeism" AND  "Rate"',
+  '"manager"  AND "feedback"',
+  '"employee" AND  "adjusting"  AND  "workplace"',
+  '"manager" AND  "empathy"' ,
+  '"satisfied" AND  "with"  AND "the" AND  "jobs"',
+  '"low-risk" AND  "environment" AND  "for" AND  "reevaluating"',
+  '"employee"  AND "Organizational" AND  "performance"',
+  '"lack"  AND "of"  AND "vacation"',
+  '"improving"  AND "skills"' ,
+  '"employee"  AND "motivation"',
+  '"likely"  AND "to"  AND "stay" AND  "with" AND  "the"  AND "organization"',
+  '"social"  AND "skills"',
+  '"Employee" AND  "Engagement"',
+  "departures",
+  '"promotions"   AND "senior"  AND "roles"',
+  '"Forced" AND  "ranking"',
+  '"Human"  AND "Resources" AND  "Dashboard"',
+  '"vitality"  AND "curve"  AND "ranking"',
+  '"manager-employee"  AND "relationship"', 
+  '"Show" AND  "Recognition"',
+  '"Overtime"  AND "per"  AND "Employee"',
+  '"colleagues"  AND "feedback"',
+  '"Retention"  AND "rate"  AND "per" AND  "manager"'
+)
+
+
+Financial_Performance<- c(
+  "ASSETS",
+  "LIABILITIES",
+  '"Owners"  AND "equity"',
+  '"balance"  AND "sheet"',
+  "Auditors",
+  '"financial" AND  "picture"',
+  '"quarterly" AND  "balance" AND  "sheet"' ,
+  "liquidation",
+  '"financial"   AND "legal" AND  "obligations"',
+  '"degree"  AND "of"  AND "ownership"',
+  '"CUSTOMER"  AND "RELATIONS"',
+  '"Income"  AND "Statement" AND  "Analysis"',
+  '"operating"  AND "activities"  AND "cash"  AND "flow"',
+  '"mature"  AND "company"',
+  '"annual" AND  "report"',
+  '"Asset"  AND "Allocation"',
+  '"return" AND  "on" AND  "investment"' ,
+  "ROI",
+  "BUDGETING",
+  '"Financial"  AND "key"  AND "performance"  AND "indicators"',
+  '"quantifiable"  AND "value"',
+  '"Money"  AND  "company"  AND "owes"  AND "to"  AND  "debtor"',
+  '"financial" AND  "health"',
+  '"financial"  AND "records"',
+  '"profit"  AND "and"  AND "loss" AND  "statement"',
+  '"records"  AND "transactions"',
+  '"monthly"  AND "balance"  AND "sheet" ',
+  '"non-current"  AND "assets"',
+  "debtor" ,
+  '"company"  AND "shares"',
+  '"LEASEHOLD"  AND "RIGHTS"',
+  '"Vertical"  AND "Income" AND  "Statement"   AND "Analysis"',
+  '"investingactivities"  AND "cash"  AND "flow"',
+  '"profitable"  AND "company"',
+  '"marketing"  AND "collateral"',
+  "Bonds",
+  '"choice" AND  "of"  AND "accounting" AND  "method"',
+  '"financial"  AND "plan"',
+  '"rack" AND  "the" AND  "company" AND  "financial" AND  "health"',
+  '"income" AND  "statement"',
+  '"outstanding"  AND "payroll"  AND "expenses"',
+  '"net"  AND "worth"   AND  "company"',
+  "transaction",
+  '"record"  AND "financial" AND  "information"',
+  '"credit"   AND "deferred" AND  "payments"',
+  '"company" AND  "policy"',
+  '"current"  AND "assets"',
+  '"current"  AND "liability"',
+  '"company"  AND "earnings"',
+  '"APITALIZED"  AND "EXPENDITURES"',
+  '"Horizontal"  AND "Income" AND  "Statement"  AND  "Analysis"',
+ ' "financing"  AND "activities"  AND  "cash" AND  "flow"',
+  '"company"   AND "wellbeing"',
+  '"annual"  AND "shareholder" AND  "meeting"',
+  "stocks" ,
+  '"Expected"  AND "Revenues"',
+  '"individual"  AND "performance"',
+  '"measure"  AND "the" AND  "company" AND  "financial" AND  "health"',
+  '"Return" AND  "on" AND  "Assets"',
+  '"debt"  AND "payment"',
+  "shareholder",
+  '"free"  AND  "cash" AND   "flow"',
+  '"business"  AND  "volatility"',
+  '"year-over-year"  AND  "growth" AND    "company"',
+  '"potential"  AND  "investor"',
+  '"Marketable" AND   "securities"',
+  '"non-current"  AND  "liability"',
+  '"Total" AND   "Asset"  AND  "Turnover"',
+  '"BUILDINGS"  AND  "AND" AND   "LAND"',
+  '"identify"  AND  "trends"',
+  '"real"  AND  "estate" AND   "investement"' ,
+  '"vehicles"  AND  "investement"',
+  '"board"  AND    "directors"',
+  "dividends",
+  '"TOTAL" AND   "EXPENSES"',
+  '"group"  AND  "performance"',
+  '"analyze"  AND  "the" AND   "company"  AND  "financial"  AND  "health"',
+  '"Seasonality" AND   "performance"',
+  '"company"  AND  "rent"',
+  '"private"  AND  "owner"',
+  "reinvest",
+  '"ambiguity"  AND  "around" AND   "revenues" AND   "and"  AND  "expenses"',
+  '"seasonal"  AND  "and" AND   "cyclical"  AND  "changes"',
+  '"complying"  AND  "with"  AND  "any"  AND  "reporting" AND   "laws"' ,
+  '"Accounts"  AND  "receivable"',
+  '"Payroll"  AND  "expenses"',
+  '"Inventory"  AND  "Turnover"',
+  '"EQUIPMENT"  AND  "TOOLS"  AND   "FIXTURES"  AND  "AND"  AND  "FITTINGS"',
+  '"SELLING" AND   "AND"  AND  "OPERATING" AND   "EXPENSES"',
+  '"company"  AND   "health"',
+  '"grow"  AND  "its"  AND  "operations"',
+  '"company" AND   "growth" AND   "over"  AND  "time"',
+  '"cash"  AND  "equivalents"' ,
+  '"NET"  AND  "PROFIT"',
+  '"Allocating"  AND  "resources"',
+  '"profitability"  AND  "performance"  AND  "measure"',
+  '"Return" AND   "on" AND   "Equity"',
+  '"bonds"  AND  "payable"',
+  "investor",
+  '"expense" AND   "cover"',
+  '"anticipating"  AND  "expenses" AND   "and"  AND  "revenues"',
+  '"asset" "lower"  AND  "projected"  AND  "values"',
+  '"currency"  AND  "exchange" AND   "rates"' ,
+  '"Cash" AND   "and" AND   "cash"  AND  "equivalents"',
+  '"Debt"  AND  "financing"',
+  '"small" AND    "medium"   AND  "sized" AND   "businesses"',
+  '"LONG-TERM" AND   "RECEIVABLES"',
+  '"GENERAL" AND   "AND" AND   "ADMINISTRATIVE" AND   "EXPENSES"',
+  '"rapidly"  AND  "growing"  AND  "startup"',
+  '"company" AND   "is"  AND  "going" AND   "through"  AND  "transition" ',
+  '"expand"  AND  "the"  AND  "business"',
+  '"capital"  AND  "gain"',
+  '"Earnings" AND   "before" AND   "interest" AND   "taxes"  AND  "depreciation" AND   "and" AND   "amortization"  AND  "EBITDA"',
+  '"Budgeting" AND   "Timeline"',
+  '"liquidity"  AND   "performance"  AND  "measure"',
+  '"Financial"  AND  "Accounting"  AND  "Standards"  AND  "Board"  AND  "FASB"',
+  '"company" AND   "tax"',
+  '"GAIN" " AND  ON" AND   "FINANCIAL"  AND  "INSTRUMENTS"',
+  '"indicator"  AND  "of"  AND  "profitability"',
+  '"monitor"  AND  "profitability"',
+  '"liability"  AND  "higher"  AND  "estimates"',
+  '"inventory" AND   "levels"',
+  '"long-term" AND  "investments"',
+  '"Accounts"  AND  "payable"',
+  '"valuation"   AND  "performance" AND   "measure"',
+  '"DEFERRED" AND   "TAX" AND   "RECEIVABLES"',
+  '"depreciation" AND   "of"  AND  "market"  AND  "share"',
+  '"company" AND   "in"  AND  "a" AND   "state"  AND  "of" AND   "decline"',
+  '"purchasing"  AND  "or"  AND  "selling" AND   "assets"',
+  '"maintain"   AND  "the" AND   "business"',
+  '"capital"  AND  "loss"',
+  '"Budgeting"  AND  "Procedures"',
+  '"solvency"  AND   "performance"  AND  "measure"',
+  '"generally" AND   "accepted" AND   "accounting" "principles"' ,
+  "GAAP",
+  '"Income" AND   "Statement"',
+  '"LOSS"  AND  "ON"  AND  "FINANCIAL" AND "INSTRUMENTS"',
+  '"Letters" AND   "to"  AND  "shareholders"',
+  '"special" AND   "purpose" AND   "frameworks"' ,
+  "SPFs",
+  '"company" AND   "valuation"',
+  '"miscalculations"  AND  "of"  AND  "equity"',
+  '"company" AND   "oatent" ',
+  '"Utility"  AND  "payments"',
+  '"compound"  AND  "interest"' ,
+  '"Leverage"  AND  "Financial"  AND  "Data"',
+  '"efficiency"   AND  "performance"  AND  "measure"',
+  '"International" AND   "Financial" "Reporting" AND   "Standards"' ,
+  "IFRS",
+ ' "company" AND   "Revenue"',
+  '"INTEREST"  AND  "EXPENSE"',
+  '"accrual" AND   "method" AND  "of"  AND  "accounting"',
+  '"cash" AND   "basis" AND   "of"  AND  "accounting"',
+ ' "discount"  AND  "rate"',
+  '"miscalculated"  AND  "depreciation"' ,
+  '"company" AND   "goodwill"',
+  "leases",
+  '"Management"  AND  "discussion"  AND  "and"  AND  "analysis" AND   "MD&A"',
+  "forecasting",
+  '"Evaluate" AND   "Performance"',
+  '"budget"  AND  "management" AND   "process"' ,
+ ' "Net"  AND  "Profit"  AND  "Margin"',
+  '"company"  AND  "net" AND   "worth" ',
+  '"cash" AND   "basis"  AND  "accounting"',
+  '"tax"  AND  "basis"  AND  "of" AND   "accounting"',
+ ' "opportunity" AND  "cost"',
+  '"miscalculated"  AND  "amortization"',
+  "trademarks",
+  "loans",
+  '"summary"  AND  "of"  AND  "financial"  AND  "data"',
+  '"company"  AND  "expenses"',
+  '"costs" AND   "of" AND   "goods"  AND  "sold" AND   "COGS"',
+  '"extent" AND   "of" AND   "financial"  AND  "operations"',
+  '"company"  AND   "reporting" AND   "risk"',
+  '"Audited"  AND  "financial"  AND  "statements"',
+  "liquidity" ,
+  '"Bonds"  AND  "payable"',
+  '"deliver"  AND  "feedback"',
+  '"Gross" AND   "Profit"  AND  "Margin"',
+  '"Accounting" AND   "policies"',
+  "valuation" ,
+  '"operating"  AND  "income"',
+  '"company"  AND  "financial"  AND  "position"',
+  '"regulatory"  AND  "basis" AND   "of" AND   "accounting"',
+  '"stream"  AND  "of"  AND  "cash"',
+  '"Deferred" AND   "tax"  AND  "liabilities"',
+  '"Equipment" AND   "used"  AND  "to"  AND  "produce"  AND  "goods" AND   "or"  AND  "perform" AND   "services"',
+  '"income" AND   "before"  AND  "taxes"',
+  '"monitor" AND   "accounts" AND   "receivable"',
+  '"IRS"  AND  "requirements"',
+  '"financial" AND   "statements"',
+  '"contractual" AND   "basis" AND   "of"  AND  "accounting"',
+  '"company"  AND  "book" AND   "value"',
+ ' "key"  AND  "stakeholders"',
+ ' "earning"  AND  "per"  AND  "share"  AND  "EPS"',
+  '"Provisions"  AND  "for"  AND  "pensions"',
+  '"Debt-to-Equity" AND   "Ratio"',
+  '"Gross"  AND  "profit"',
+ ' "company"   AND  "economic"  AND  "reality"',
+  '"net" AND   "income"',
+  '"Leverage"',
+ ' "Auditor"  AND   "report"',
+  '"time"  AND  "value" AND   "of"  AND  "money" ',
+  '"Quick"  AND  "Ratio"',
+ ' "Current" AND   "Ratio"',
+  '"Working"  AND  "Capital"'
+  )
+
+```
+
+
+
+
+**SCRAPIING THE NEWS**
+
+
+```{r}
+
+topic_name=c("HR_Managment", "International_Footprint","Financial_Performance")
+
+
+```
+
+
+**Scrapping articles**
+
+```{r}
+max_pagination = 5
+for (name in topic_name) {
+  reqGOOG <-c(get(name))
+  pb <- winProgressBar(title = paste0("Googling for ", name), min = 0,max = length(reqGOOG), width = 700)
+  df <- data.frame()
+  i<-1
+  for (k in reqGOOG) {
+    for (j in 0:(max_pagination-1)) {
+      setWinProgressBar(pb, i, title=paste0('Topic: ', name, ' Query: ',k,' Pagination: ', j+1 ))
+      try(
+        df <- df %>%
+          rbind(
+            as.data.frame(
+              get_news(query = k, pages = seq(from =  j, to = (j*10)+10, by= 10))
+              )
+            )
+        )
+    }
+    i <- i+1
+    print("sleeping...")
+    Sys.sleep(sample(1:5,1))
+  }
+  close(pb)
+  saveRDS(df,paste0('data/',name,as.character(Sys.Date()),".rds") )
+  print(paste("saved",name,as.character(Sys.Date()),".rds"))
+  
+}
+```
+
+
+
+**Pre-processing : added the assumed topic & removing redundancy & creating the final corpus** 
+
+
+```{r}
+scrap_date = "2021-04-21"
+df <- data.frame()
+for (name in topic_name) {
+  
+  dt<- readRDS(paste0("data/",name, scrap_date,".rds")) %>%
+  mutate(Topic = name) %>%
+  unique() %>%
+  select(-c(query,source,  keywords)) %>%
+  distinct() %>%
+  filter(textcat(titles) == 'english')
+  assign(name, dt)
+  df <- df %>% 
+    rbind(dt)
+}
+
+df <- df %>%
+  mutate(NWORDS = str_count(texts, "\\S+")) %>%
+  filter(NWORDS > 60) %>% 
+  tibble::rowid_to_column("doc_id")%>% 
+  select("doc_id","titles","texts" ,"Topic" )
+
+#saveRDS(df, paste0('data/corpus',scrap_date,'.rds'))
+saveRDS(df, paste0('data/corpus',Sys.Date(),'.rds'))
+```
+
+
+## Load corpus 
+
+```{r}
+scrap_date = "2021-04-21"
+corpus<- readRDS(paste0('data/corpus',scrap_date,'.rds')) 
+corpus %>%
+  head()
+```
+
+
+**SEED CREATION: 1-gram & 2-grams**
+
+
+```{r}
+unigrams_data<- Vectorization_1gram(corpus)
+bigrams_data<-Vectorization_2gram(corpus)
+# tibble::tibble(bigrams_data)
+# tibble::tibble(unigrams_data)
+
+
+total_seed<-rbind(unigrams_data,bigrams_data) %>%
+  unique() %>%
+  filter(nchar(word)>3)
+view(total_seed)
+```
+
+
+
+**ADDING THE SIMILAARITY FACTOR & saving the final corpus**
+
+
+```{r include=FALSE}
+
+Similarity<-rep(0, nrow(total_seed))
+
+for (i in 1: nrow(total_seed)) {
+    top=total_seed$Topic[i]
+    word=total_seed$word[i]
+    Similarity[i] = py$sim(gsub('_',' ',top),gsub('_',' ',word))
+    print(i)
+  }
+
+
+
+total_seed <- total_seed %>% cbind(Similarity)
+names(total_seed)[5]<-"Similarity"
+# tibble::tibble(total_seed)
+saveRDS(total_seed, paste0("data/total_seed",Sys.Date(),".rds"))
+```
+
+
+
+
+```{r}
+scrap_date = "2021-04-21"
+total_seed<-readRDS(paste0("data/total_seed",scrap_date,".rds"))
+view(total_seed)
+```
+
+
+**selecting a similarity threshold**
+
+```{r}
+
+dtm<- as.data.table(total_seed)
+dtm=unique(dtm[Similarity>0.5,])
+l = length(unique(dtm$word))
+dtm=data.table::dcast(dtm,
+           doc_id~word,
+           value.var = "n"
+           )
+
+dtm=dtm[,-"doc_id"]
+dtm[is.na(dtm)]<-0
+nrow(dtm)
+head(dtm,1)
+```
+
+
+
+```{r}
+seedwords <- data.frame(
+financial_crime = rep(0,l),#
+Financial_Performance = rep(0,l) ,#
+financing_terrorism = rep(0,l),#
+Fraud = rep(0,l),#
+HR_Managment  = rep(0,l),#
+International_Footprint = rep(0,l),#
+money_laundering = rep(0,l),#
+Suspicious_activity = rep(0,l),#
+   other = rep(0,l) 
+) 
+seedwords <-  seedwords %>% 
+  mutate(names = colnames(dtm))
+
+
+
+seedwords <- seedwords %>% 
+  mutate(
+    financial_crime = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "financial_crime"], 1, 0)
+  )%>% 
+   mutate(   
+financing_terrorism = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "financing_terrorism"], 1, 0)
+)%>% 
+  mutate(
+Fraud = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "Fraud"], 1, 0)
+)%>% 
+  mutate(
+money_laundering = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "money_laundering"], 1, 0)
+)%>% 
+  mutate(
+Suspicious_activity = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "Suspicious_activity"], 1, 0)
+)%>% 
+  mutate(
+    International_Footprint = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "International_Footprint"], 1, 0)
+    ) %>% 
+  mutate(
+    HR_Managment = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "HR_Managment"], 1, 0)
+    )%>% 
+  mutate(
+    Financial_Performance = ifelse(seedwords$names %in% total_seed$word[total_seed$Topic == "Financial_Performance"], 1, 0)
+    ) 
+  
+
+row.names(seedwords) <- seedwords$names
+
+seedwords <- as.matrix(seedwords %>% select(- names)) %>% t()
+saveRDS(seedwords,"data/seedwords.rds")
+
+# Fit the topic model
+mod <- topicmodels::LDA(dtm, k=8, method="Gibbs",
+         seedwords=seedwords,
+         control=list(alpha=1, iter=500, seed=1234))
+# Examine topic assignment in the fitted model
+saveRDS(mod,"data/model.rds")
+tidy(mod, "gamma") %>%
+  spread(topic, gamma) 
+```
+
+
+```{r}
+mod=read_rds("data/model.rds")
+```
+
+
+```{r}
+term<- terms(mod,k=2000) %>%
+  as.data.frame() 
+names(term)<-c("Fraud","Financial Crime / Suspisious Activity", "HR Management","Financial performance","Terrorism","Other","International Footprint","MoneyLaundering")
+
+
+fwrite(term, "term.csv")
+saveRDS(term,"term.rds")
+tibble::tibble(term)
+
+```
+
+
+**test on new data**
+
+
+```{r}
+art = data.frame(
+  texts = c(
+    "At least $11 billion has been looted from California’s coffers in an unemployment fraud scheme run rampant across the state, while another $20 billion in possible losses is still being investigated.
+
+California Labor Secretary Julie Su told reporters in a conference call Monday that of the $114 billion the state has paid in unemployment claims during the coronavirus pandemic, 10 percent, or $11.4 billion, involves fraud and another 17 percent is under investigation. 
+
+There is no sugarcoating the reality, Su said during a press conference Monday. California has not had sufficient security measures in place to prevent this level of fraud, and criminals took advantage of the situation.
+
+Nearly all of the fraudulent claims were paid through the federally supported Pandemic Unemployment Assistance program. The program was approved by Congress to provide unemployment assistance to those who usually wouldn’t be eligible, such as independent contractors. 
+
+CALIFORNIA IGNORES PUBLIC RECORDS REQUEST, KEEPS CORONAVIRUS DATA HIDDEN
+
+Officials say the program’s broad eligibility requirements made it an easy target for criminals, including from Russia and Nigeria. In December, 21,000 prisoners scored more than $400 million from the state, including 100 prisoners on death row. 
+
+The  California Employment Development Department (EDD) froze the accounts of 1.4 million relying on the assistance earlier this month while it investigated the fraud. As of last week, 1.2 million of the accounts were still suspended. EDD said the other claimants are either being sent a questionnaire to complete to help EDD determine if they meet eligibility requirements for continued benefits, or are receiving a Determination Notice letting them know about a disqualification and their appeal rights.
+
+The state also has been trying to clear a persistent backlog of claims — more than 940,000 as of Jan. 20.
+
+While admitting the state had been unprepared, Su also said the Trump administration had failed to provide guidance to foil sophisticated unemployment schemes. 
+
+CALIFORNIA INMATES MAY HAVE BILKED $400M FROM STATE'S UNEMPLOYMENT 
+
+Su detailed an agency in overdrive trying to process the explosion of new claims as businesses were shuttered. Some 19 million claims have been processed by the department.
+
+It should be no surprise that EDD was overwhelmed, just like the rest of the nation’s unemployment agencies, Su said. As millions of Californians applied for help, international and national criminal rings were at work behind the scenes working relentlessly to steal unemployment benefits using sophisticated methods of identity theft.
+
+On Monday California Democrats House Speaker Nancy Pelosi and Sens. Dianne Feinstein and Alex Padilla called on President Biden to create a federal task force designed to assist states in rooting out organized fraud in jobless claims. 
+
+CLICK HERE TO GET THE FOX NEWS APP
+
+California and many other states are experiencing fraud at a much greater rate than previously understood, perpetrated by international and interstate criminal organizations moving from state to state, they wrote in a letter.
+    ",
+"
+It's telling that regulators aren’t asking why high-end hedge funds were allowed to target vulnerable corporations, such as GameStop, in an alleged short-selling scheme to drive their victims into bankruptcy. As the stock price of their prey goes to nearly zero, the hedge fund honchos could earn multimillions—or billions of dollars–in profits off of the companies closing their doors and laying off thousands of employees into the worst job market in modern history.  
+
+Instead, according to the Wall Street Journal, the Securities and Exchange Commission (SEC) is looking into the young, goofy, fun-loving, scrappy and foul-mouthed novice investors on the r/wallstreetbets subreddit of Reddit. There is the feel of an institutional knee-jerk reaction to accept activities from established Wall Street professionals (no matter how odious it seems), while shining a harsh light on new—mostly naive—entrants into the financial community.
+
+The storyline against the loosely knit confederation of emerging investors, who are still fuming over the 2008 financial crisis that bailed out the banks, but put their parents out of work and wiped out their savings, are on a mission. It's the “little guy” against the wealthy hedge fund elite. 
+
+Now, the young adults are relatively new day traders. They’ve rallied together to buy shares of GameStop and other heavily shorted stocks. Spurred on by discussion on Reddit and other social media sites, large numbers of small investors fell in love with companies and invested in them by buying their stock and speculating in options.
+
+Some institutional-type folks are claiming foul on the Wallstreetbets crowd. Daniel Hawke, a partner at Arnold & Porter Kaye Scholer, in a Wall Street Journal piece, said about the Gen-Z and Millennial investors, “If they are all egging each other on using a social-media platform, they are effectively engaged in a crowdsourced pump-and-dump scheme.” He added that the day traders “are making no effort to conceal their apparent intent to manipulate the price of the stock.” Hawke was a former chief of the Securities and Exchange Commission’s market abuse unit.
+",
+"
+Mall owner Simon Property Group has formed a “blank check” company to go on the hunt for “a company or assets with significant growth potential and prospects.” The company added, in a press release, that it has filed for an initial public offering (IPO) with the goal of raising $300 million for the new entity.
+
+The move comes as the retail industry is reeling from a double blow: fallout from the pandemic and the great shift of consumer buying to online sales. Simon owns such properties as the upscale Copley Place in Boston.
+
+The new company will be a special purpose acquisition company (SPAC) called Simon Property Group Acquisition. A SPAC, or blank-check company, has no commercial operations, but is formed to raise cash and go shopping for an existing company or companies to acquire.
+
+According to the release, “The target will likely be in an industry that will benefit from the experience, expertise, and operating skills of the management team” and Simon Property Group, the nation’s largest mall owner.
+
+Indianapolis-based Simon said the IPO will offer 30 million “units” at $10. Each unit will consist of one share of common stock and one-fourth of a warrant, exercisable at $11.50. “At the proposed deal size, Simon Property Group Acquisition will command a market value $375 million,” the mall owner said.
+
+The new company will be led by David Simon, the CEO and chairman of Simon Property Group, who will serve as chairman; Eli Simon, as CEO and director; and Brian McDade as chief financial officer. McDade currently serves as CFO of Simon Property Group.
+
+Reshaping malls has become a hot topic, amid retailer bankruptcies and the difficulties malls are having in collecting rent. In 2020, every major traditional mall tenant was facing serious financial trouble or declared bankruptcy.
+
+For example, JCPenney and Sears both filed for bankruptcy. As the pandemic hit, Simon malls had 63 JCPenney stores and 11 Sears stores.
+",
+"In past judicial practice, the court mainly took into consideration the infringement’s influence and infringer’s subjective malice; however, after the promulgation of the Civil Code, the court will examine more aspects when it considers whether a behavior constitutes a privacy right infringement.
+
+Article 998 of the Civil Code stipulates that, in determining an infringer’s civil liability for infringing upon personal rights other than the right to life, right to body, and right to health, such factors as the occupations of the infringer and the victim, scope of influence, degree of fault, as well as the purpose, method, and consequences of the act shall be considered. And this article is also applicable to privacy right infringement.
+
+Based on this article, if there is an employment subordinate relationship between parties, the regular criteria in determining privacy right infringement are no longer applicable.
+
+“Taken into consideration of the occupation of the infringer and the victim” could be interpretated as “taken into consideration of the occupational subordination relationship between the tort-feasor and the victim” to some extent. And under an employment subordinate relationship, it is not proper to unilaterally emphasize employers’ employment management right, or employee’s privacy rights.
+
+Rather, both parties should realize there are boundaries to their rights and the employee shall waive certain privacy rights to ensure a balance between employer’s employment management rights and employee’s privacy right. Therefore, whether there is an employment subordinate relationship between parties must be taken into consideration when judging whether a behavior constitutes a privacy right infringement",
+"
+TALLAHASSEE, Fla. (WCTV) - The Tallahassee Police Department says it arrested a 25-year-old man after finding more than 37 grams of molly and 1,000 grams of marijuana while serving a search warrant.
+
+In a press release, TPD says it is actively working to improve quality of life issues connected to illegal drug activity in public housing complexes.
+
+“The latest investigation into the trafficking of molly resulted in one arrest and took multiple guns off the streets,” the release says.
+
+On Friday, Jan. 29, TPD officers executed a search warrant in the 2500 block of Holton Street. During the search, officers found more than 37 grams of molly. Police estimate its street value is more than $37,000.
+
+Police also found more than 1,000 grams of marijuana, a loaded AK-47 pistol, a semi-automatic handgun, drug paraphernalia and more than $500 cash.
+
+Devin Brown Jr. was arrested on the following charges after the search warrant was served:
+
+Trafficking in Alpha-PVP
+Possession of Alpha-PVP with intent to sell within 1,000 feet of a public housing complex
+Possession of more than 20 grams of cannabis with intent to sell within 1,000 feet of a public housing complex
+Possession of drug paraphernalia
+Maintaining a drug house
+TPD says the sale and use of illegal drugs impact the community, especially when things escalate into violent crimes.
+
+“TPD is dedicated to directly addressing these activities as they can decrease the safety and overall quality of life for citizens,” the release says. “This operation exemplifies the positive outcome of proactive efforts to identify a problem, develop a plan and make a concerted effort to rid public housing complexes of narcotics traffickers.”
+
+TPD encourages community members to report illegal activity to its tip line: 850-891-4200. To stay anonymous with your tips, call Big Bend Crime Stoppers at 850-574-TIPS.
+"
+),
+doc_id = 1:5
+)
+art$texts <- as.character(art$texts)
+
+
+art_1gram<-Vectorization_1gram_test(art)
+art_2gram<-Vectorization_2gram_test(art)
+total_seed_art<-rbind(art_1gram,art_2gram)
+
+
+test_table <- total_seed_art %>% 
+  count(doc_id, word) %>%
+  right_join(total_seed %>% as.data.frame() %>% select(word), by=c("word"="word")) %>%
+  distinct()
+
+
+# Prepare a document-term matrix
+test_dtm <- test_table %>%
+  arrange(desc(doc_id)) %>%
+  mutate(doc_id = ifelse(is.na(doc_id), first(doc_id), doc_id),
+         n = ifelse(is.na(n), 0, n)) %>%
+  as.data.table()
+
+test_dtm=dcast(test_dtm,
+           doc_id~word,
+           value.var = "n"
+           )
+test_dtm[is.na(test_dtm)]<-0
+
+test_dtm<-test_dtm[doc_id %in% c(1:5),]
+# Obtain posterior probabilities for test documents
+results <- posterior(object=mod, newdata=test_dtm)
+doc2top = as.data.frame(results$topics)
+```
+
+
+
+
+
+```{r}
+
+doc_id = 3
+
+data = data.frame(
+  app = as.numeric(doc2top[nrow(doc2top)-doc_id+1,]), # switch to article to analyze
+  leg = c("Fraud","Financial Crime / Suspisious Activity", "HR Management","Financial performance","Terrorism","Other","International Footprint","MoneyLaundering")
+) %>%
+  mutate(ymax = cumsum(app)) %>%
+  mutate(ymin = c(0, head(ymax, n=-1)))
+fig <- plot_ly(data, labels = ~leg, values = ~app , type = 'pie')
+fig
+```
+
+
+
+
+```{r}
+visualize_topic(art,mod,3)
+```
+
+
+```{r}
+print(as.data.table(art)[doc_id==3, texts])
+```
+
+
