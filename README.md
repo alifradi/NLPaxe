@@ -168,7 +168,7 @@ Seed creation is automated under the imported functionalities.
 
 with a right join to all vacobulary terms setting the non existing terms frequencies to 0   (it won't affect the model), by then we cast it to dtm matrix   
 
-6 - use LDA poserioti to determin topics distributions  
+6 - use LDA posteriori to determin topics distributions  
 
 7 - try it on one document to give a pie chart about the presence of each targeted topic in the testing article.  
 
